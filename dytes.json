@@ -1,8 +1,20 @@
 {
-  "name": "screen",
+  "name": "piksel",
   "version": "1.0.0",
-  "description": "core for screen",
-  "keywords": ["screen"],
+  "description": "piksel for apps management",
+  "keywords": ["apps", "management"],
   "author": "funxdata",
-  "type": "core"
+  "type": "app",
+  "license": "MIT",
+  "dependencies-core": {
+    "piksel": "^1.0.0",
+    "cyctron": "^1.0.0"
+  },
+  "dependencies-sys": {
+    "ostfil": "^1.0.0",
+    "database": "^1.0.0"
+  },
+  "dependencies-web": {
+    "init": "^1.0.0"
+  }
 }

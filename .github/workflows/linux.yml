@@ -49,9 +49,9 @@ jobs:
       - name: Prepare upload directory
         run: |
           mkdir -p upload
-          cp target/release/screen upload/
+          cp target/release/piksel upload/
 
-      # 6. 上传到 UpYun S3
+      # 6. 上传文件
       - name: Upload to UpYun S3
         uses: shallwefootball/s3-upload-action@master
         with:
@@ -61,4 +61,6 @@ jobs:
           source_dir: upload
           destination_dir: core/${{ steps.version.outputs.project }}/${{ steps.version.outputs.version }}/linux
           endpoint: https://s3.api.upyun.com
+     
+
 

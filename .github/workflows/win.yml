@@ -32,7 +32,7 @@ jobs:
       - name: Prepare upload directory
         run: |
           mkdir upload
-          copy target\release\screen.exe upload\
+          copy target\release\${{ steps.version.outputs.project }}.exe upload\
 
       - name: Upload to UpYun S3
         uses: shallwefootball/s3-upload-action@master
