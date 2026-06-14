@@ -1,6 +1,14 @@
+name: Upload Info
+
+on:
+  push:
+    branches:
+      - main
+
 jobs:
   upload-info:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -8,25 +16,23 @@ jobs:
       - name: Read version from JSON
         id: version
         run: |
-          # 提取字段并做非空校验
           PROJECT=$(jq -r '.name' dytes.json)
           VERSION=$(jq -r '.version' dytes.json)
+
           if [[ -z "$PROJECT" || -z "$VERSION" ]]; then
             echo "ERROR: name or version empty in dytes.json"
             exit 1
           fi
+
           echo "project=$PROJECT" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      # 上传单个 dytes.json 到又拍云 S3
       - name: Upload dytes.json to UpYun S3
         uses: shallwefootball/s3-upload-action@master
         with:
           aws_key_id: ${{ secrets.UPYUN_API_KEY }}
           aws_secret_access_key: ${{ secrets.UPYUN_API_SECRET }}
           aws_bucket: ${{ secrets.UPYUN_BUCKET }}
-          # 单个文件用 source_file，不要用 source_dir
           source_file: ./dytes.json
-          # 目标完整对象路径
           destination_path: app/${{ steps.version.outputs.project }}.json
           endpoint: https://s3.api.upyun.com
