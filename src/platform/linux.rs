@@ -1,17 +1,10 @@
+use winit::dpi::LogicalSize;
 use winit::event_loop::ActiveEventLoop;
 use winit::window::Window;
-use winit::dpi::LogicalSize;
 
 pub fn create_window(event_loop: &ActiveEventLoop, debug: bool) -> Option<Window> {
-    let mut attrs = Window::default_attributes()
-        .with_title("Screen")
+    let attrs = Window::default_attributes()
+        .with_title("Piksel")
         .with_inner_size(LogicalSize::new(800.0, 600.0));
-
-    if !debug {
-        attrs = attrs
-            .with_decorations(false)
-            .with_fullscreen(Some(winit::window::Fullscreen::Borderless(None)));
-    }
-
     event_loop.create_window(attrs).ok()
 }

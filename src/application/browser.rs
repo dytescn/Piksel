@@ -3,22 +3,12 @@ use wry::{WebView, WebViewBuilder};
 
 pub fn create_webview(
     window: Option<&Window>,
-    debug: bool,
+    _debug: bool,
 ) -> Option<WebView> {
     let window = window?;
     let mut builder = WebViewBuilder::new()
         .with_initialization_script("window.IS_DESKTOP = true;");
-
-    if debug {
-        println!("......debug........");
-        builder = builder
-            .with_url("https://www.funxdata.com/")
-            .with_devtools(true);
-    } else {
-        println!("......release........");
-        builder = builder
-            .with_url("https://www.funxdata.com/");
-    }
-
+    builder = builder
+            .with_url("http://127.0.0.1:44944");
     builder.build(window).ok()
 }

@@ -10,11 +10,7 @@ use core::pid::PidManager;
 use winit::event_loop::EventLoop;
 
 #[derive(Parser)]
-#[command(
-    author = "screen",
-    version = "1.0",
-    about = "digital screen developer tools"
-)]
+#[command(author = "piksel", version = "1.0", about = "co-design soft")]
 struct Args {
     #[command(subcommand)]
     command: Option<Commands>,
@@ -84,7 +80,7 @@ fn run_app(debug: bool) {
     pid_mgr.stop_cyctron();
     pid_mgr.clean_pid();
 
-    println!("✅ Cleanup completed");
+    println!("Cleanup completed");
 }
 
 fn main() {

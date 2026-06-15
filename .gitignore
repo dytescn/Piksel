@@ -29,4 +29,5 @@ cyctron*
 */node_modules/
 */node_modules**
 */deno.lock*
-
+web/*
+web*
