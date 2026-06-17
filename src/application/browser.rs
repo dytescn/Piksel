@@ -3,8 +3,11 @@ use wry::{WebView, WebViewBuilder};
 
 pub fn create_webview(window: Option<&Window>) -> Option<WebView> {
     let window = window?;
-    let mut builder =
-        WebViewBuilder::new().with_initialization_script("window.Piksel_DESKTOP = true;");
-    builder = builder.with_url("http://127.0.0.1:44944");
+
+    let builder = WebViewBuilder::new().with_initialization_script("window.Piksel_DESKTOP = true;");
+
+    let url = url::Url::parse("http://127.0.0.1:44944").ok()?;
+    let builder = builder.with_url(url);
+
     builder.build(window).ok()
 }

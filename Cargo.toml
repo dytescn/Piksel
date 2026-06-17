@@ -17,6 +17,7 @@ wry = "0.54.2"
 winit = "0.30.12"
 libc = "0.2"
 pixels = "0.17.1"
+url = "2.5.8"
 
 [build-dependencies]
 winres = "0.1"
