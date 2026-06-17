@@ -4,31 +4,11 @@ mod application;
 mod core;
 mod platform;
 
-use clap::{Parser, Subcommand};
 use core::app::App;
 use core::pid::PidManager;
 use winit::event_loop::EventLoop;
 
-#[derive(Parser)]
-#[command(author = "piksel", version = "1.0", about = "co-design soft")]
-struct Args {
-    #[command(subcommand)]
-    command: Option<Commands>,
-}
-
-#[derive(Subcommand)]
-enum Commands {
-    /// Running application
-    Start,
-    /// Init developer project
-    Init,
-    /// Running in debug mode
-    Debug,
-    /// Stop the application
-    Stop,
-}
-
-fn run_app(debug: bool) {
+fn main() {
     // ==============================
     // 🔥 全部改用 PidManager 管理
     // ==============================
@@ -46,14 +26,9 @@ fn run_app(debug: bool) {
         return;
     }
 
-    println!("✅ Program started, pid: {}", std::process::id());
-
+    println!("Program started, pid: {}", std::process::id());
     // 注册全局退出监听
     core::pid::setup_exit_handler();
-
-    if debug {
-        println!("Running in Debug mode...");
-    }
 
     #[cfg(target_os = "linux")]
     {
@@ -62,7 +37,7 @@ fn run_app(debug: bool) {
     }
 
     let event_loop = EventLoop::new().expect("Failed to create EventLoop");
-    let mut app = App::new(debug);
+    let mut app = App::new();
 
     // ==============================
     // 🔥 启动 cyctron 并托管
@@ -81,20 +56,4 @@ fn run_app(debug: bool) {
     pid_mgr.clean_pid();
 
     println!("Cleanup completed");
-}
-
-fn main() {
-    let args = Args::parse();
-
-    match args.command.unwrap_or(Commands::Start) {
-        Commands::Start => run_app(false),
-        Commands::Debug => run_app(true),
-        Commands::Stop => {
-            // PidManager::remove_run_flag();
-            println!("Application stopped.");
-        }
-        Commands::Init => {
-            println!("Project initialization not yet implemented.");
-        }
-    }
 }
