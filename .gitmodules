@@ -1,0 +1,3 @@
+[ubmodule "piksel_web"]
+	path = piksel_web
+	url = git@github.com:dytescn/piksel_web.git
