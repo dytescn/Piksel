@@ -31,3 +31,9 @@ cyctron*
 */deno.lock*
 web/*
 web*
+publish*
+update*
+dytes.lock
+example*
+Cargo.lock*
+

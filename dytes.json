@@ -7,14 +7,20 @@
   "type": "app",
   "license": "MIT",
   "dependencies-core": {
-    "piksel": "^1.0.0",
-    "cyctron": "^1.0.0"
+    "cyctron": "1.0.0",
+    "update": "1.0.0"
   },
   "dependencies-sys": {
-    "ostfil": "^1.0.0",
-    "database": "^1.0.0"
-  },
+    "ostfil": "1.0.0",
+    "database": "1.0.0"
+  }, 
   "dependencies-web": {
-    "init": "^1.0.0"
+    "init": "1.0.0",
+    "pages": "1.0.0",
+    "stylesheet": "1.0.0"
+  },
+  "exports": {
+    "./index.html": "index.html",
+    "./target/release/piksel.exe": "piksel.exe"
   }
 }
