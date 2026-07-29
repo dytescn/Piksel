@@ -3,8 +3,8 @@ use winit::event_loop::ActiveEventLoop;
 use winit::window::Window;
 
 pub fn create_window(event_loop: &ActiveEventLoop) -> Option<Window> {
-    let mut attrs = Window::default_attributes()
+    let attrs = Window::default_attributes()
         .with_title("Piksel")
-        .with_inner_size(LogicalSize::new(1920.0, 1080.0));
+        .with_inner_size(LogicalSize::new(800.0, 600.0));
     event_loop.create_window(attrs).ok()
 }
