@@ -1,15 +1,24 @@
 <!DOCTYPE html>
 <html lang="zh-cn">
 <head>
-  <meta charset="UTF-8" name="viewport"
-    content="width=device-width,minimum-scale=1,maximum-scale=1,initial-scale=1,user-scalable=no">
+  <meta charset="UTF-8" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1,initial-scale=1,user-scalable=no">
   <link rel="icon" href="https://book.funxdata.com/public/funxdata.ico">
   <title>Piksel</title>
+  <link rel="stylesheet" href="/stylesheet/funxui.css">
+  <link rel="stylesheet" href="/stylesheet/funxicon.css">
+  <link rel="stylesheet" href="/chat/release.css">
+  <link rel="stylesheet" href="/chat/marked.css">
+  <script type="module" src="/pages/browser.js"></script>
+  <script type="module" src="/pages/router.js"></script>
+    <script type="module">
+    import { marked } from "/chat/marked.js";
+    window.marked = marked;
+  </script>
 </head>
 <body>
   <div id="asides" class="vg-asides"></div>
   <div id="app"></div>
   <div id="popup"></div>
- <script type="module" src="/init/init.js"></script>
 </body>
+<script type="module" src="/init/init.js"></script>
 </html>
