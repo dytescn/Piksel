@@ -38,6 +38,8 @@ impl PidManager {
     }
 
     pub fn start_cyctron(&mut self) -> std::io::Result<()> {
+        // Piksel 启动时先替换 update.new.exe（update.exe 此时未运行）
+        self.replace_update();
         // 先运行更新
         self.run_update()?;
         
@@ -47,6 +49,22 @@ impl PidManager {
         let child = std::process::Command::new(exe).arg("start").spawn()?;
         self.child = Some(child);
         Ok(())
+    }
+
+    /// 用 update.new.exe 替换 update.exe（无 bootstrap，由 Piksel 主程序完成）
+    fn replace_update(&self) {
+        let new_path = std::path::Path::new("update.new.exe");
+        if !new_path.exists() {
+            return;
+        }
+        let old_path = std::path::Path::new("update.exe");
+        if old_path.exists() {
+            let _ = fs::remove_file(old_path);
+        }
+        match fs::rename(new_path, old_path) {
+            Ok(_) => println!("✅ update.exe replaced"),
+            Err(e) => eprintln!("Failed to replace update.exe: {e}"),
+        }
     }
 
     pub fn stop_cyctron(&mut self) {
