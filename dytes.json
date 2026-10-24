@@ -1,6 +1,6 @@
 {
   "name": "piksel",
-  "version": "1.1.11",
+  "version": "1.1.12",
   "description": "piksel for apps management",
   "keywords": [
     "apps",
@@ -19,7 +19,7 @@
     "sysinfo": "0.1.0"
   },
   "dependencies-web": {
-    "init": "1.0.19",
+    "init": "1.0.20",
     "pages": "1.0.0",
     "stylesheet": "1.0.0",
     "chat_ui": "1.0.10",
