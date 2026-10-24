@@ -1,6 +1,6 @@
 {
   "name": "piksel",
-  "version": "1.1.12",
+  "version": "1.1.13",
   "description": "piksel for apps management",
   "keywords": [
     "apps",
@@ -23,7 +23,7 @@
     "pages": "1.0.0",
     "stylesheet": "1.0.0",
     "chat_ui": "1.0.10",
-    "setting": "1.0.2"
+    "setting": "1.0.4"
   },
   "exports": {
     "./index.html": "index.html",
