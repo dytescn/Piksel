@@ -1,6 +1,8 @@
 use std::fs;
 use std::io;
 use std::process::Child;
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 #[cfg(windows)]
@@ -46,7 +48,15 @@ impl PidManager {
         let exe = "./cyctron";
         println!("Trying to start: {}", exe);
         println!("Exists: {}", std::path::Path::new(exe).exists());
-        let child = std::process::Command::new(exe).arg("start").spawn()?;
+
+        let mut cmd = std::process::Command::new(exe);
+        cmd.arg("start");
+        #[cfg(windows)]
+        {
+            const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+            cmd.creation_flags(CREATE_NO_WINDOW);
+        }
+        let child = cmd.spawn()?;
         self.child = Some(child);
         Ok(())
     }
@@ -77,15 +87,21 @@ impl PidManager {
 
     pub fn run_update(&mut self) -> std::io::Result<()> {
         #[cfg(windows)] {
+            const CREATE_NO_WINDOW: u32 = 0x0800_0000;
             let exe = "update.exe";
             println!("Running: {}", exe);
-            let mut child = std::process::Command::new(exe).spawn()?;
+            let mut cmd = std::process::Command::new(exe);
+            cmd.args(["--auto", "--startup"]);
+            cmd.creation_flags(CREATE_NO_WINDOW);
+            let mut child = cmd.spawn()?;
             let _ = child.wait();
         }
         #[cfg(any(unix, target_os = "macos"))] {
             let exe = "update";
             println!("Running: {}", exe);
-            let child = std::process::Command::new(exe).spawn()?;
+            let child = std::process::Command::new(exe)
+                .args(["--auto", "--startup"])
+                .spawn()?;
             let _ = child.wait();
         }
         Ok(())
