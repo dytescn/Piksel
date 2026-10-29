@@ -118,13 +118,30 @@ piksel/
 
 ## 发布
 
-推送到 `main` 后，GitHub Actions 会分别在 Windows / macOS / Linux 上执行 `cargo build --release`，并把产物上传到对象存储：
+发布由 [`.github/workflows/release.yml`](.github/workflows/release.yml) 统一完成，**只在打 tag 或手动触发时运行**，日常提交不会触发构建。
 
-```text
-core/piksel/<version>/win|mac|linux
+```bash
+# 先同时升级 Cargo.toml 与 dytes.json 的 version，再打同名 tag
+git tag v1.1.13
+git push origin v1.1.13
+
+# 或手动重跑：GitHub → Actions → Release Piksel → Run workflow
 ```
 
-同时 `info.yml` 会把 `dytes.json` 上传到 `app/piksel.json`。
+流程：
+
+1. `build` 矩阵并行构建 Windows / macOS / Linux，并上传二进制到对象存储：
+
+   ```text
+   core/piksel/<version>/win|linux|mac
+   ```
+
+2. `publish-manifest` 在三个平台全部构建成功后，上传 `dytes.json` 到 `app/piksel.json`（构建失败不会覆盖线上清单）。
+
+构建前会校验：
+
+- `Cargo.toml` 与 `dytes.json` 的 `version` 必须一致；
+- tag 发布时，tag 名必须是 `v` + 版本号（如 `v1.1.13`）。
 
 > 发版前务必**同时**更新 `Cargo.toml` 与 `dytes.json` 中的 `version`；仅替换二进制而不升版本，`update.exe` 会认为“已是最新”而跳过更新。
 
