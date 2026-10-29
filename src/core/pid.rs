@@ -40,11 +40,9 @@ impl PidManager {
     }
 
     pub fn start_cyctron(&mut self) -> std::io::Result<()> {
-        // Piksel 启动时先替换 update.new.exe（update.exe 此时未运行）
-        self.replace_update();
-        // 先运行更新
+        // 先运行更新；dytes 是安装 Piksel 的必要组件
         self.run_update()?;
-        
+
         let exe = "./cyctron";
         println!("Trying to start: {}", exe);
         println!("Exists: {}", std::path::Path::new(exe).exists());
@@ -61,22 +59,6 @@ impl PidManager {
         Ok(())
     }
 
-    /// 用 update.new.exe 替换 update.exe（无 bootstrap，由 Piksel 主程序完成）
-    fn replace_update(&self) {
-        let new_path = std::path::Path::new("update.new.exe");
-        if !new_path.exists() {
-            return;
-        }
-        let old_path = std::path::Path::new("update.exe");
-        if old_path.exists() {
-            let _ = fs::remove_file(old_path);
-        }
-        match fs::rename(new_path, old_path) {
-            Ok(_) => println!("✅ update.exe replaced"),
-            Err(e) => eprintln!("Failed to replace update.exe: {e}"),
-        }
-    }
-
     pub fn stop_cyctron(&mut self) {
         if let Some(mut child) = self.child.take() {
             let _ = child.kill();
@@ -86,20 +68,18 @@ impl PidManager {
     }
 
     pub fn run_update(&mut self) -> std::io::Result<()> {
-        let dytes = if cfg!(windows) { "dytes.exe" } else { "dytes" };
-        let legacy = if cfg!(windows) { "update.exe" } else { "update" };
-        let use_dytes = std::path::Path::new(dytes).exists();
-        let exe = if use_dytes { dytes } else { legacy };
+        let exe = if cfg!(windows) { "dytes.exe" } else { "dytes" };
+        if !std::path::Path::new(exe).exists() {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                format!("未找到 {exe}，请先安装 dytes"),
+            ));
+        }
 
         println!("Running: {}", exe);
         let mut cmd = std::process::Command::new(exe);
-        if use_dytes {
-            // dytes 统一入口：`dytes update --auto --startup`
-            cmd.args(["update", "--auto", "--startup"]);
-        } else {
-            // 兼容旧 update.exe：安装目录尚未升级到 dytes 时使用
-            cmd.args(["--auto", "--startup"]);
-        }
+        // dytes 统一入口：`dytes update --auto --startup`
+        cmd.args(["update", "--auto", "--startup"]);
         #[cfg(windows)]
         {
             const CREATE_NO_WINDOW: u32 = 0x0800_0000;
