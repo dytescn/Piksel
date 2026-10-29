@@ -99,7 +99,7 @@ impl PidManager {
         #[cfg(any(unix, target_os = "macos"))] {
             let exe = "update";
             println!("Running: {}", exe);
-            let child = std::process::Command::new(exe)
+            let mut child = std::process::Command::new(exe)
                 .args(["--auto", "--startup"])
                 .spawn()?;
             let _ = child.wait();
