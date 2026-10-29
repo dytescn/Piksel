@@ -86,24 +86,27 @@ impl PidManager {
     }
 
     pub fn run_update(&mut self) -> std::io::Result<()> {
-        #[cfg(windows)] {
-            const CREATE_NO_WINDOW: u32 = 0x0800_0000;
-            let exe = "update.exe";
-            println!("Running: {}", exe);
-            let mut cmd = std::process::Command::new(exe);
+        let dytes = if cfg!(windows) { "dytes.exe" } else { "dytes" };
+        let legacy = if cfg!(windows) { "update.exe" } else { "update" };
+        let use_dytes = std::path::Path::new(dytes).exists();
+        let exe = if use_dytes { dytes } else { legacy };
+
+        println!("Running: {}", exe);
+        let mut cmd = std::process::Command::new(exe);
+        if use_dytes {
+            // dytes 统一入口：`dytes update --auto --startup`
+            cmd.args(["update", "--auto", "--startup"]);
+        } else {
+            // 兼容旧 update.exe：安装目录尚未升级到 dytes 时使用
             cmd.args(["--auto", "--startup"]);
+        }
+        #[cfg(windows)]
+        {
+            const CREATE_NO_WINDOW: u32 = 0x0800_0000;
             cmd.creation_flags(CREATE_NO_WINDOW);
-            let mut child = cmd.spawn()?;
-            let _ = child.wait();
         }
-        #[cfg(any(unix, target_os = "macos"))] {
-            let exe = "update";
-            println!("Running: {}", exe);
-            let mut child = std::process::Command::new(exe)
-                .args(["--auto", "--startup"])
-                .spawn()?;
-            let _ = child.wait();
-        }
+        let mut child = cmd.spawn()?;
+        let _ = child.wait();
         Ok(())
     }
 }
@@ -124,6 +127,7 @@ pub fn setup_exit_handler() {
         }
     }
 
+    #[cfg(unix)]
     extern "C" fn exit_handler(_: i32) {
         EXIT_FLAG.store(true, Ordering::Release);
     }
