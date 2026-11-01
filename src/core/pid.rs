@@ -40,9 +40,6 @@ impl PidManager {
     }
 
     pub fn start_cyctron(&mut self) -> std::io::Result<()> {
-        // 先运行更新；dytes 是安装 Piksel 的必要组件
-        self.run_update()?;
-
         let exe = "./cyctron";
         println!("Trying to start: {}", exe);
         println!("Exists: {}", std::path::Path::new(exe).exists());
@@ -56,6 +53,9 @@ impl PidManager {
         }
         let child = cmd.spawn()?;
         self.child = Some(child);
+
+        // 更新不阻塞窗口创建：放到后台线程，失败只记录日志。
+        spawn_background_update();
         Ok(())
     }
 
@@ -67,13 +67,16 @@ impl PidManager {
         }
     }
 
-    pub fn run_update(&mut self) -> std::io::Result<()> {
+}
+
+/// 后台执行 `dytes update --auto --startup`，不阻塞 Piksel 启动。
+/// 更新失败或超时只记录日志，窗口与 cyctron 已经可用。
+fn spawn_background_update() {
+    std::thread::spawn(|| {
         let exe = if cfg!(windows) { "dytes.exe" } else { "dytes" };
         if !std::path::Path::new(exe).exists() {
-            return Err(io::Error::new(
-                io::ErrorKind::NotFound,
-                format!("未找到 {exe}，请先安装 dytes"),
-            ));
+            eprintln!("未找到 {exe}，跳过启动更新");
+            return;
         }
 
         println!("Running: {}", exe);
@@ -85,10 +88,11 @@ impl PidManager {
             const CREATE_NO_WINDOW: u32 = 0x0800_0000;
             cmd.creation_flags(CREATE_NO_WINDOW);
         }
-        let mut child = cmd.spawn()?;
-        let _ = child.wait();
-        Ok(())
-    }
+        match cmd.status() {
+            Ok(status) => println!("后台更新完成: {status}"),
+            Err(e) => eprintln!("后台更新失败: {e}"),
+        }
+    });
 }
 
 static EXIT_FLAG: AtomicBool = AtomicBool::new(false);
