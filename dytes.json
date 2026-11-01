@@ -1,6 +1,6 @@
 {
   "name": "piksel",
-  "version": "1.1.22",
+  "version": "1.1.23",
   "description": "piksel for apps management",
   "keywords": [
     "apps",
@@ -10,7 +10,7 @@
   "type": "app",
   "license": "MIT",
   "dependencies-core": {
-    "cyctron": "1.0.13",
+    "cyctron": "1.0.14",
     "dytes": "0.1.6"
   },
   "dependencies-sys": {
@@ -26,20 +26,16 @@
     "setting": "1.0.4"
   },
   "exports": {
-    "./index.html": "index.html",
     "./target/release/piksel.exe": "piksel.exe"
   },
   "platform-exports": {
     "windows": {
-      "./index.html": "index.html",
       "./target/release/piksel.exe": "piksel.exe"
     },
     "linux": {
-      "./index.html": "index.html",
       "./target/release/piksel": "piksel"
     },
     "macos": {
-      "./index.html": "index.html",
       "./target/release/piksel": "piksel"
     }
   },

@@ -108,7 +108,6 @@ jobs:
           set -euo pipefail
           mkdir -p upload
           cp "target/release/${{ matrix.binary }}" upload/
-          cp index.html upload/
           ls -l upload
 
       - name: Upload binary to UpYun S3

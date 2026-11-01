@@ -53,7 +53,6 @@ Piksel/
 │   └── utils/
 │       └── ip.rs               # 本机 IPv4 查询（预留工具）
 ├── icons/                      # Windows 图标资源
-├── index.html                  # 应用入口页，加载 init/init.js
 ├── dytes.json                  # 包描述、依赖与发布导出配置
 ├── build.rs                    # Windows 图标资源编译
 ├── Cargo.toml
@@ -78,14 +77,13 @@ cargo build --release
 
 ## 运行
 
-Piksel 需要在**工作目录**中找到同级的 `cyctron` 与 `update`，并加载 `index.html` 及 Web 资源。典型目录：
+Piksel 需要在**工作目录**中找到同级的 `cyctron` 与 `update`；首页 HTML 由 cyctron 内置返回，不再需要 `index.html` 文件。典型目录：
 
 ```text
 piksel/
 ├── piksel.exe / piksel
 ├── cyctron.exe / cyctron
 ├── update.exe / update
-├── index.html
 └── run.pid                  # 运行时自动生成
 ```
 
@@ -100,12 +98,11 @@ piksel/
 ```json
 {
   "name": "piksel",
-  "version": "1.1.13",
+  "version": "1.1.23",
   "type": "app",
-  "dependencies-core": { "cyctron": "1.0.13", "update": "1.0.0" },
+  "dependencies-core": { "cyctron": "1.0.14", "update": "1.0.0" },
   "dependencies-web": { "init": "1.0.20", "pages": "1.0.0", "...": "..." },
   "exports": {
-    "./index.html": "index.html",
     "./target/release/piksel.exe": "piksel.exe"
   },
   "auto_update": true
