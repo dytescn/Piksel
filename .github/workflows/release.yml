@@ -27,7 +27,7 @@ jobs:
           - os: windows-latest
             platform: windows
             binary: piksel.exe
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             platform: linux
             binary: piksel
           - os: macos-latest
@@ -123,6 +123,7 @@ jobs:
   publish-manifest:
     name: Publish manifest
     needs: build
+    if: always()
     runs-on: ubuntu-latest
 
     steps:
