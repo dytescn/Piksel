@@ -1,6 +1,6 @@
 {
   "name": "piksel",
-  "version": "1.1.19",
+  "version": "1.1.20",
   "description": "piksel for apps management",
   "keywords": [
     "apps",
@@ -28,6 +28,20 @@
   "exports": {
     "./index.html": "index.html",
     "./target/release/piksel.exe": "piksel.exe"
+  },
+  "platform-exports": {
+    "windows": {
+      "./index.html": "index.html",
+      "./target/release/piksel.exe": "piksel.exe"
+    },
+    "linux": {
+      "./index.html": "index.html",
+      "./target/release/piksel": "piksel"
+    },
+    "macos": {
+      "./index.html": "index.html",
+      "./target/release/piksel": "piksel"
+    }
   },
   "auto_update": true
 }

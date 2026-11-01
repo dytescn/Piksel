@@ -25,13 +25,13 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            platform: win
+            platform: windows
             binary: piksel.exe
           - os: ubuntu-latest
             platform: linux
             binary: piksel
           - os: macos-latest
-            platform: mac
+            platform: macos
             binary: piksel
 
     steps:
@@ -117,7 +117,7 @@ jobs:
           aws_secret_access_key: ${{ secrets.UPYUN_API_SECRET }}
           aws_bucket: ${{ secrets.UPYUN_BUCKET }}
           source_dir: upload
-          destination_dir: core/${{ steps.version.outputs.project }}/${{ steps.version.outputs.version }}/${{ matrix.platform }}
+          destination_dir: app/${{ steps.version.outputs.project }}/${{ steps.version.outputs.version }}/${{ matrix.platform }}
           endpoint: ${{ secrets.UPYUN_ENDPOINT || 'https://s3.api.upyun.com' }}
 
   publish-manifest:
@@ -144,7 +144,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p upload-manifest
-          cp dytes.json "upload-manifest/${{ steps.package.outputs.project }}.json"
+          cp dytes.json upload-manifest/dytes.json
           ls -l upload-manifest
 
       - name: Upload manifest to UpYun S3
@@ -154,5 +154,5 @@ jobs:
           aws_secret_access_key: ${{ secrets.UPYUN_API_SECRET }}
           aws_bucket: ${{ secrets.UPYUN_BUCKET }}
           source_dir: upload-manifest
-          destination_dir: app
+          destination_dir: app/${{ steps.package.outputs.project }}
           endpoint: ${{ secrets.UPYUN_ENDPOINT || 'https://s3.api.upyun.com' }}
