@@ -40,7 +40,19 @@ impl PidManager {
     }
 
     pub fn start_cyctron(&mut self) -> std::io::Result<()> {
-        let exe = "./cyctron";
+        // 发布产物按平台命名（cyctron.bin / cyctron.app），安装器会额外生成
+        // 无后缀的 `cyctron` 命令入口；这里按优先级回退，兼容旧安装。
+        let candidates = ["./cyctron", "./cyctron.exe", "./cyctron.bin", "./cyctron.app"];
+        let exe = candidates
+            .iter()
+            .copied()
+            .find(|path| std::path::Path::new(path).is_file())
+            .ok_or_else(|| {
+                std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    "未找到 cyctron（cyctron / cyctron.exe / cyctron.bin / cyctron.app）",
+                )
+            })?;
         println!("Trying to start: {}", exe);
         println!("Exists: {}", std::path::Path::new(exe).exists());
 
@@ -73,11 +85,17 @@ impl PidManager {
 /// 更新失败或超时只记录日志，窗口与 cyctron 已经可用。
 fn spawn_background_update() {
     std::thread::spawn(|| {
-        let exe = if cfg!(windows) { "dytes.exe" } else { "dytes" };
-        if !std::path::Path::new(exe).exists() {
-            eprintln!("未找到 {exe}，跳过启动更新");
+        // 命令入口统一为 `dytes`；Windows 为 dytes.exe，Linux / macOS 安装后
+        // 为无后缀 dytes（发布产物分别是 dytes.bin / dytes.app）。
+        let candidates = ["dytes", "dytes.exe", "dytes.bin", "dytes.app"];
+        let Some(exe) = candidates
+            .iter()
+            .copied()
+            .find(|path| std::path::Path::new(path).is_file())
+        else {
+            eprintln!("未找到 dytes，跳过启动更新");
             return;
-        }
+        };
 
         println!("Running: {}", exe);
         let mut cmd = std::process::Command::new(exe);

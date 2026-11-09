@@ -1,6 +1,6 @@
 {
   "name": "piksel",
-  "version": "1.1.26",
+  "version": "1.1.27",
   "description": "piksel for apps management",
   "keywords": [
     "apps",
@@ -33,10 +33,10 @@
       "./target/release/piksel.exe": "piksel.exe"
     },
     "linux": {
-      "./target/release/piksel": "piksel"
+      "./target/release/piksel": "piksel.bin"
     },
     "macos": {
-      "./target/release/piksel": "piksel"
+      "./target/release/piksel": "piksel.app"
     }
   },
   "auto_update": true

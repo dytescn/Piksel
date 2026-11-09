@@ -27,12 +27,15 @@ jobs:
           - os: windows-latest
             platform: windows
             binary: piksel.exe
+            artifact: piksel.exe
           - os: ubuntu-24.04
             platform: linux
             binary: piksel
+            artifact: piksel.bin
           - os: macos-latest
             platform: macos
             binary: piksel
+            artifact: piksel.app
 
     steps:
       - name: Checkout repository
@@ -107,7 +110,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p upload
-          cp "target/release/${{ matrix.binary }}" upload/
+          cp "target/release/${{ matrix.binary }}" "upload/${{ matrix.artifact }}"
           ls -l upload
 
       - name: Upload binary to UpYun S3
