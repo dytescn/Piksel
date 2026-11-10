@@ -1,6 +1,6 @@
 {
   "name": "piksel",
-  "version": "1.1.29",
+  "version": "1.1.30",
   "description": "piksel for apps management",
   "keywords": [
     "apps",
@@ -14,6 +14,7 @@
     "dytes": "0.1.29"
   },
   "dependencies-sys": {
+    "chatllm": "1.0.15",
     "ostfil": "1.0.3",
     "database": "1.0.4",
     "sysinfo": "0.1.2"
