@@ -1,6 +1,6 @@
 {
   "name": "piksel",
-  "version": "1.1.28",
+  "version": "1.1.29",
   "description": "piksel for apps management",
   "keywords": [
     "apps",
@@ -22,8 +22,8 @@
     "init": "1.0.23",
     "pages": "1.0.1",
     "stylesheet": "1.0.4",
-    "chat_ui": "1.0.15",
-    "setting": "1.0.11"
+    "chat_ui": "1.0.17",
+    "setting": "1.0.13"
   },
   "exports": {
     "./target/release/piksel.exe": "piksel.exe"
