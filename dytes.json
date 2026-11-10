@@ -1,6 +1,6 @@
 {
   "name": "piksel",
-  "version": "1.1.27",
+  "version": "1.1.28",
   "description": "piksel for apps management",
   "keywords": [
     "apps",
@@ -10,16 +10,16 @@
   "type": "app",
   "license": "MIT",
   "dependencies-core": {
-    "cyctron": "1.0.14",
-    "dytes": "0.1.10"
+    "cyctron": "1.0.18",
+    "dytes": "0.1.29"
   },
   "dependencies-sys": {
-    "ostfil": "1.0.0",
-    "database": "1.0.0",
-    "sysinfo": "0.1.0"
+    "ostfil": "1.0.3",
+    "database": "1.0.4",
+    "sysinfo": "0.1.2"
   },
   "dependencies-web": {
-    "init": "1.0.22",
+    "init": "1.0.23",
     "pages": "1.0.1",
     "stylesheet": "1.0.4",
     "chat_ui": "1.0.15",
