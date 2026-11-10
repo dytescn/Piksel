@@ -10,7 +10,7 @@ Piksel 是一个用 Rust 编写的轻量桌面容器：它只负责**原生窗�
 用户双击 piksel.exe
         │
         ├─ 单实例检查（run.pid）
-        ├─ update.exe --auto --startup      检查并安装更新
+        ├─ dytes update --gui               图形化检查并安装更新
         ├─ cyctron start                    启动本地服务 127.0.0.1:44944
         └─ 原生窗口 + WebView ──────────────▶ Web UI
         │
@@ -21,14 +21,14 @@ Piksel 是一个用 Rust 编写的轻量桌面容器：它只负责**原生窗�
 | --- | --- |
 | **Piksel** | 桌面外壳：窗口、WebView、单实例、更新与 `cyctron` 生命周期 |
 | [cyctron](https://github.com/funxdata/cyctron) | 本地服务与运行时，监听 `127.0.0.1:44944` |
-| [update](https://github.com/dytescn/piksel_install) | 更新器，由 Piksel 以 `--auto --startup` 调用 |
+| [dytes](https://github.com/dytescn/dytes) | 安装 / 更新 / 发布工具链，由 Piksel 以 `update --gui` 调用 |
 | [init](https://github.com/dytescn/init) 等 Web 包 | 前端初始化与界面，由 WebView 加载 |
 
 ## 主要能力
 
 - **原生窗口 + WebView**：基于 `winit` + `wry`，Windows / macOS / Linux 共用一套窗口与尺寸同步逻辑。
 - **单实例运行**：通过 `run.pid` 记录进程号，并用系统调用（Windows `OpenProcess`、Unix `kill(pid, 0)`）判断其是否存活，避免重复启动。
-- **启动自更新**：启动时先用 `update.new.exe` 替换旧的 `update.exe`，再同步执行 `update.exe --auto --startup`。
+- **启动自更新**：启动后在后台打开 `dytes update --gui` 图形更新窗口，不阻塞窗口创建。
 - **服务托管**：以子进程方式运行 `cyctron start`；Windows 下不弹出控制台窗口，主进程退出时终止并回收该子进程。
 - **注入桌面标识**：向页面注入 `window.Piksel_DESKTOP = true`，Web 层可据此启用桌面端行为。
 - **跨平台适配**：Linux 下初始化 GTK 并在事件循环中泵送 GTK 事件，避免 WebView 闪烁；退出时注册 `SIGINT` / `SIGTERM` / Windows 控制台事件处理。
@@ -77,19 +77,19 @@ cargo build --release
 
 ## 运行
 
-Piksel 需要在**工作目录**中找到同级的 `cyctron` 与 `update`；首页 HTML 由 cyctron 内置返回，不再需要 `index.html` 文件。典型目录：
+Piksel 需要在**工作目录**中找到同级的 `cyctron` 与 `dytes`；首页 HTML 由 cyctron 内置返回，不再需要 `index.html` 文件。典型目录：
 
 ```text
 piksel/
 ├── piksel.exe / piksel
 ├── cyctron.exe / cyctron
-├── update.exe / update
+├── dytes.exe / dytes
 └── run.pid                  # 运行时自动生成
 ```
 
-直接执行 `piksel.exe` 即可；首次运行前请确认 `cyctron` 可用，否则窗口虽会打开，但页面无法加载。推荐的完整安装 / 更新 / 发布流程请参考 [piksel_install](https://github.com/dytescn/piksel_install) 或 `dytes_sys_operations` 中的相关文档。
+直接执行 `piksel.exe` 即可；首次运行前请确认 `cyctron` 可用，否则窗口虽会打开，但页面无法加载。推荐的完整安装 / 更新 / 发布流程请参考 `dytes_sys_operations` 中的相关文档。
 
-`example/` 目录保存了一套可运行的本地示例（含 `cyctron`、`update` 与 Web 资源），但不纳入版本控制。
+`example/` 目录保存了一套可运行的本地示例（含 `cyctron`、`dytes` 与 Web 资源），但不纳入版本控制。
 
 ## 配置：dytes.json
 
@@ -98,10 +98,11 @@ piksel/
 ```json
 {
   "name": "piksel",
-  "version": "1.1.23",
+  "version": "1.1.31",
   "type": "app",
-  "dependencies-core": { "cyctron": "1.0.14", "update": "1.0.0" },
-  "dependencies-web": { "init": "1.0.20", "pages": "1.0.0", "...": "..." },
+  "dependencies-core": { "cyctron": "1.0.18", "dytes": "0.1.30" },
+  "dependencies-sys": { "chatllm": "1.0.15", "ostfil": "1.0.3", "database": "1.0.4", "sysinfo": "0.1.2" },
+  "dependencies-web": { "init": "1.0.23", "pages": "1.0.1", "stylesheet": "1.0.4", "chat_ui": "1.0.17", "setting": "1.0.13" },
   "exports": {
     "./target/release/piksel.exe": "piksel.exe"
   },
@@ -109,9 +110,9 @@ piksel/
 }
 ```
 
-- `dependencies-core` / `dependencies-sys` / `dependencies-web`：安装时由 `piksel_install` 解析并拉取。
+- `dependencies-core` / `dependencies-sys` / `dependencies-web`：安装时由 `dytes` 解析并拉取。
 - `exports`：发布时把构建产物映射到包内路径。
-- `auto_update`：允许 `update` 在启动时自动检查更新。
+- `auto_update`：允许 `dytes update --gui` 在启动时自动检查更新。
 
 ## 发布
 
@@ -119,8 +120,8 @@ piksel/
 
 ```bash
 # 先同时升级 Cargo.toml 与 dytes.json 的 version，再打同名 tag
-git tag v1.1.13
-git push origin v1.1.13
+git tag v1.1.31
+git push origin v1.1.31
 
 # 或手动重跑：GitHub → Actions → Release Piksel → Run workflow
 ```
@@ -130,17 +131,17 @@ git push origin v1.1.13
 1. `build` 矩阵并行构建 Windows / macOS / Linux，并上传二进制到对象存储：
 
    ```text
-   core/piksel/<version>/win|linux|mac
+   app/piksel/<version>/windows|linux|macos
    ```
 
-2. `publish-manifest` 在三个平台全部构建成功后，上传 `dytes.json` 到 `app/piksel.json`（构建失败不会覆盖线上清单）。
+2. `publish-manifest` 在三个平台全部构建成功后，上传 `dytes.json` 到 `app/piksel/dytes.json`（构建失败不会覆盖线上清单）。
 
 构建前会校验：
 
 - `Cargo.toml` 与 `dytes.json` 的 `version` 必须一致；
-- tag 发布时，tag 名必须是 `v` + 版本号（如 `v1.1.13`）。
+- tag 发布时，tag 名必须是 `v` + 版本号（如 `v1.1.31`）。
 
-> 发版前务必**同时**更新 `Cargo.toml` 与 `dytes.json` 中的 `version`；仅替换二进制而不升版本，`update.exe` 会认为“已是最新”而跳过更新。
+> 发版前务必**同时**更新 `Cargo.toml` 与 `dytes.json` 中的 `version`；仅替换二进制而不升版本，`dytes` 会认为“已是最新”而跳过更新。
 
 ## 许可证
 

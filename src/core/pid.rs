@@ -81,7 +81,7 @@ impl PidManager {
 
 }
 
-/// 后台执行 `dytes update --auto --startup`，不阻塞 Piksel 启动。
+/// 后台打开 `dytes update --gui` 图形更新窗口，不阻塞 Piksel 启动。
 /// 更新失败或超时只记录日志，窗口与 cyctron 已经可用。
 fn spawn_background_update() {
     std::thread::spawn(|| {
@@ -99,8 +99,8 @@ fn spawn_background_update() {
 
         println!("Running: {}", exe);
         let mut cmd = std::process::Command::new(exe);
-        // dytes 统一入口：`dytes update --auto --startup`
-        cmd.args(["update", "--auto", "--startup"]);
+        // dytes 统一入口：`dytes update --gui`
+        cmd.args(["update", "--gui"]);
         #[cfg(windows)]
         {
             const CREATE_NO_WINDOW: u32 = 0x0800_0000;

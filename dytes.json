@@ -1,6 +1,6 @@
 {
   "name": "piksel",
-  "version": "1.1.30",
+  "version": "1.1.31",
   "description": "piksel for apps management",
   "keywords": [
     "apps",
@@ -11,7 +11,7 @@
   "license": "MIT",
   "dependencies-core": {
     "cyctron": "1.0.18",
-    "dytes": "0.1.29"
+    "dytes": "0.1.30"
   },
   "dependencies-sys": {
     "chatllm": "1.0.15",
