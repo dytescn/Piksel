@@ -37,3 +37,13 @@ dytes.lock
 example*
 Cargo.lock*
 
+# dytes 测试与本地同步产物（dytes test / dytes update 生成，不提交）
+.dytes/
+libary/
+models/
+database/
+designdb/
+dytes.lock
+piksel.exe
+dytes.exe
+

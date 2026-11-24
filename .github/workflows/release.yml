@@ -70,6 +70,7 @@ jobs:
           set -euo pipefail
           project=$(node -p "require('./dytes.json').name")
           version=$(node -p "require('./dytes.json').version")
+          pkg_type=$(node -p "require('./dytes.json').type")
           cargo_version=$(cargo metadata --format-version 1 --no-deps \
             | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const j=JSON.parse(s);console.log(j.packages.find(p=>p.name==="piksel").version)})')
 
@@ -83,6 +84,7 @@ jobs:
 
           echo "project=$project" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "type=$pkg_type" >> "$GITHUB_OUTPUT"
 
       - name: Build release
         shell: bash
@@ -120,7 +122,7 @@ jobs:
           aws_secret_access_key: ${{ secrets.UPYUN_API_SECRET }}
           aws_bucket: ${{ secrets.UPYUN_BUCKET }}
           source_dir: upload
-          destination_dir: app/${{ steps.version.outputs.project }}/${{ steps.version.outputs.version }}/${{ matrix.platform }}
+          destination_dir: ${{ steps.version.outputs.type }}/${{ steps.version.outputs.project }}/${{ steps.version.outputs.version }}/${{ matrix.platform }}
           endpoint: ${{ secrets.UPYUN_ENDPOINT || 'https://s3.api.upyun.com' }}
 
   publish-manifest:
@@ -140,8 +142,10 @@ jobs:
           set -euo pipefail
           project=$(node -p "require('./dytes.json').name")
           version=$(node -p "require('./dytes.json').version")
+          pkg_type=$(node -p "require('./dytes.json').type")
           echo "project=$project" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "type=$pkg_type" >> "$GITHUB_OUTPUT"
 
       - name: Prepare manifest
         shell: bash
@@ -158,5 +162,5 @@ jobs:
           aws_secret_access_key: ${{ secrets.UPYUN_API_SECRET }}
           aws_bucket: ${{ secrets.UPYUN_BUCKET }}
           source_dir: upload-manifest
-          destination_dir: app/${{ steps.package.outputs.project }}
+          destination_dir: ${{ steps.package.outputs.type }}/${{ steps.package.outputs.project }}
           endpoint: ${{ secrets.UPYUN_ENDPOINT || 'https://s3.api.upyun.com' }}
