@@ -28,7 +28,14 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     pid::install_panic_hook();
     println!("Program started, pid: {}", std::process::id());
 
-    let result = run_event_loop(&mut pid_mgr);
+    // 事件循环内的 panic（例如 winit X11 输入法 focus 失败）会由 panic hook
+    // 先清理一次；这里再捕获一层，保证 main 的清理路径一定执行，并返回明确的
+    // 非零退出码，而不是让 panic 直接终止进程。
+    let result: Result<(), Box<dyn std::error::Error>> =
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            run_event_loop(&mut pid_mgr)
+        }))
+        .unwrap_or_else(|_| Err("Piksel 事件循环异常退出".into()));
 
     // 无论是正常退出还是初始化失败，都回收 cyctron 并清理 PID 文件。
     pid_mgr.stop_cyctron();

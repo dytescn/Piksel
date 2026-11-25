@@ -32,7 +32,7 @@ Piksel 是一个用 Rust 编写的轻量桌面容器：它只负责**原生窗�
 - **服务托管**：以子进程方式运行 `cyctron start`；Windows 下不弹出控制台窗口，主进程退出时终止并回收该子进程。
 - **注入桌面标识**：向页面注入 `window.Piksel_DESKTOP = true`，Web 层可据此启用桌面端行为。
 - **跨平台适配**：Linux 下初始化 GTK 并在事件循环中泵送 GTK 事件，避免 WebView 闪烁；`SIGINT` / `SIGTERM` / Windows 控制台事件通过 `EventLoopProxy` 投递到事件循环，能走正常的退出清理路径；panic 时由 panic hook 兜底终止 cyctron、删除 `run.pid`。
-- **开发调试**：WebView 默认开启 devtools。
+- **生产配置**：不启用 WebView devtools；页面开发与调试在独立的开发应用中进行。
 
 ## 目录结构
 
@@ -45,7 +45,7 @@ Piksel/
 │   │   ├── paths.rs            # 运行时路径：可执行文件目录、run.pid、同级可执行文件
 │   │   └── pid.rs              # PidManager：单实例锁、更新、cyctron 托管
 │   ├── application/
-│   │   ├── browser.rs          # 创建 WebView（URL、注入脚本、devtools）
+│   │   ├── browser.rs          # 创建 WebView（URL、注入脚本）
 │   │   └── vindu.rs            # 窗口创建入口（转交 platform）
 │   ├── platform/
 │   │   ├── windows.rs          # Windows 窗口（800×600）
@@ -99,7 +99,7 @@ piksel/
 ```json
 {
   "name": "piksel",
-  "version": "1.1.36",
+  "version": "1.1.37",
   "type": "app",
   "dependencies-core": { "cyctron": "1.0.18", "dytes": "0.2.24" },
   "dependencies-sys": { "chatllm": "0.2.7", "ostfil": "1.0.5", "database": "1.0.6", "sysinfo": "0.1.3" },
@@ -122,8 +122,8 @@ piksel/
 
 ```bash
 # 先同时升级 Cargo.toml 与 dytes.json 的 version，再打同名 tag
-git tag v1.1.36
-git push origin v1.1.36
+git tag v1.1.37
+git push origin v1.1.37
 
 # 或手动重跑：GitHub → Actions → Release Piksel → Run workflow
 ```
@@ -141,7 +141,7 @@ git push origin v1.1.36
 构建前会校验：
 
 - `Cargo.toml` 与 `dytes.json` 的 `version` 必须一致；
-- tag 发布时，tag 名必须是 `v` + 版本号（如 `v1.1.36`）。
+- tag 发布时，tag 名必须是 `v` + 版本号（如 `v1.1.37`）。
 
 > 发版前务必**同时**更新 `Cargo.toml` 与 `dytes.json` 中的 `version`；仅替换二进制而不升版本，`dytes` 会认为“已是最新”而跳过更新。
 
