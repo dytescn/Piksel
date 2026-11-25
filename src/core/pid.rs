@@ -9,6 +9,7 @@ use std::time::Duration;
 use winit::event_loop::EventLoopProxy;
 
 use crate::core::app::UserEvent;
+use crate::core::dytes;
 use crate::core::paths;
 
 #[cfg(unix)]
@@ -101,7 +102,7 @@ impl PidManager {
         self.child = Some(child);
 
         // 更新不阻塞窗口创建：放到后台线程，失败只记录日志。
-        spawn_background_update();
+        dytes::spawn_background_update();
         Ok(())
     }
 
@@ -113,37 +114,6 @@ impl PidManager {
         }
         CYCTRON_PID.store(0, Ordering::Release);
     }
-}
-
-/// 后台打开 `dytes update --gui` 图形更新窗口，不阻塞 Piksel 启动。
-/// 更新失败或超时只记录日志，窗口与 cyctron 已经可用。
-fn spawn_background_update() {
-    std::thread::spawn(|| {
-        // 命令入口统一为 `dytes`；Windows 为 dytes.exe，Linux / macOS 安装后
-        // 为无后缀 dytes（发布产物分别是 dytes.bin / dytes.app）。
-        let candidates = ["dytes", "dytes.exe", "dytes.bin", "dytes.app"];
-        let Some(exe) = paths::find_executable(&candidates) else {
-            eprintln!("未找到 dytes，跳过启动更新");
-            return;
-        };
-
-        println!("Running: {}", exe.display());
-        let mut cmd = std::process::Command::new(&exe);
-        // dytes 统一入口：`dytes update --gui`
-        cmd.args(["update", "--gui"]);
-        if let Some(dir) = exe.parent() {
-            cmd.current_dir(dir);
-        }
-        #[cfg(windows)]
-        {
-            const CREATE_NO_WINDOW: u32 = 0x0800_0000;
-            cmd.creation_flags(CREATE_NO_WINDOW);
-        }
-        match cmd.status() {
-            Ok(status) => println!("后台更新完成: {status}"),
-            Err(e) => eprintln!("后台更新失败: {e}"),
-        }
-    });
 }
 
 enum LockOutcome {

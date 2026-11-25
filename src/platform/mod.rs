@@ -8,10 +8,10 @@ mod macos;
 mod linux;
 
 #[cfg(target_os = "windows")]
-pub use windows::create_window;
+pub use windows::{create_window, init, prompt_yes_no, show_message};
 
 #[cfg(target_os = "macos")]
-pub use macos::create_window;
+pub use macos::{create_window, init, prompt_yes_no, show_message};
 
 #[cfg(target_os = "linux")]
-pub use linux::create_window;
+pub use linux::{create_window, init, prompt_yes_no, show_message};

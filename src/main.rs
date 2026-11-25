@@ -9,6 +9,9 @@ use core::pid::{self, PidManager};
 use winit::event_loop::EventLoop;
 
 fn main() {
+    // 平台级初始化：Linux 下注册 X11 错误钩子，必须在任何 X11 / GLX 初始化之前。
+    platform::init();
+
     if let Err(e) = run() {
         eprintln!("Piksel 启动失败: {e}");
         std::process::exit(1);
@@ -49,6 +52,9 @@ fn run_event_loop(pid_mgr: &mut PidManager) -> Result<(), Box<dyn std::error::Er
         println!("Initializing ...");
         gtk::init().map_err(|e| format!("Failed to init GTK: {e}"))?;
     }
+
+    // 全局 dytes 缺失时提示安装；必须在 GTK 初始化之后调用（Linux 提示框依赖 GTK）。
+    core::dytes::ensure_installed();
 
     let event_loop = EventLoop::<UserEvent>::with_user_event().build()?;
     // SIGINT / SIGTERM / Windows 控制台事件通过 proxy 投递到事件循环，
