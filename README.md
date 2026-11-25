@@ -29,7 +29,7 @@ Piksel 是一个用 Rust 编写的轻量桌面容器：它只负责**原生窗�
 
 - **原生窗口 + WebView**：基于 `winit` + `wry`，Windows / macOS / Linux 共用一套窗口与尺寸同步逻辑。
 - **单实例运行**：对可执行文件目录下的 `run.pid` 加独占文件锁（Unix `flock`、Windows 独占共享模式），进程退出时由系统自动释放；不支持文件锁的文件系统回退到 PID 存活检测，避免 PID 复用时误判。
-- **启动自更新**：启动后在后台打开全局 `dytes update --gui` 图形更新窗口，不阻塞窗口创建。
+- **启动自更新**：启动时在后台执行全局 `dytes update --check`，仅当确有更新时才打开 `dytes update --gui` 图形窗口；依赖已最新时不再每次启动弹窗。
 - **dytes 缺失提示**：启动时检测 PATH 中的全局 `dytes`，未安装则弹出原生提示框，用户确认后执行官方脚本（macOS / Linux 为 `curl -fsSL https://www.dytes.cn/install.sh | sh`，Windows 为 `irm https://www.dytes.cn/install.ps1 | iex`）。
 - **服务托管**：以子进程方式运行 `cyctron start`；Windows 下不弹出控制台窗口，主进程退出时终止并回收该子进程。
 - **注入桌面标识**：向页面注入 `window.Piksel_DESKTOP = true`，Web 层可据此启用桌面端行为。
@@ -101,11 +101,11 @@ piksel/
 ```json
 {
   "name": "piksel",
-  "version": "1.1.38",
+  "version": "1.1.39",
   "type": "app",
   "dependencies-core": { "cyctron": "1.0.18" },
   "dependencies-sys": { "chatllm": "0.2.7", "ostfil": "1.0.5", "database": "1.0.6", "sysinfo": "0.1.3" },
-  "dependencies-web": { "init": "1.0.23", "pages": "1.0.1", "stylesheet": "1.0.4", "chat_ui": "1.0.17", "setting": "1.0.13" },
+  "dependencies-web": { "init": "1.0.24", "pages": "1.0.1", "stylesheet": "1.0.4", "chat_ui": "1.0.18", "setting": "1.0.14" },
   "exports": {
     "./target/release/piksel.exe": "piksel.exe"
   },
@@ -125,8 +125,8 @@ piksel/
 
 ```bash
 # 先同时升级 Cargo.toml 与 dytes.json 的 version，再打同名 tag
-git tag v1.1.38
-git push origin v1.1.38
+git tag v1.1.39
+git push origin v1.1.39
 
 # 或手动重跑：GitHub → Actions → Release Piksel → Run workflow
 ```
@@ -144,7 +144,7 @@ git push origin v1.1.38
 构建前会校验：
 
 - `Cargo.toml` 与 `dytes.json` 的 `version` 必须一致；
-- tag 发布时，tag 名必须是 `v` + 版本号（如 `v1.1.38`）。
+- tag 发布时，tag 名必须是 `v` + 版本号（如 `v1.1.39`）。
 
 > 发版前务必**同时**更新 `Cargo.toml` 与 `dytes.json` 中的 `version`；仅替换二进制而不升版本，`dytes` 会认为“已是最新”而跳过更新。
 

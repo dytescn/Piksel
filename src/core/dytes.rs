@@ -138,15 +138,77 @@ fn check_status(status: std::process::ExitStatus) -> io::Result<()> {
     }
 }
 
-/// 后台打开 `dytes update --gui` 图形更新窗口，不阻塞 Piksel 启动。
+/// 是否存在需要更新的项目。
 ///
-/// 更新失败、dytes 缺失或超时都只记录日志，窗口与 cyctron 已经可用。
+/// 首次执行 `dytes update --check --json`（只读），据此决定要不要打开图形
+/// 更新窗口：依赖已经最新时不再每次启动都弹窗。检查结果里的 `dytes` CLI
+/// 自身不在项目依赖范围内（1.1.38 起已从 `dependencies-core` 移除），需要
+/// 用 `dytes self-update` 升级，因此这里把它排除。
+fn has_project_updates(exe: &Path) -> bool {
+    let mut cmd = Command::new(exe);
+    cmd.args(["update", "--check", "--json"])
+        // dytes 按当前目录下的 dytes.json 判断被更新的应用。
+        .current_dir(paths::app_dir());
+    #[cfg(windows)]
+    {
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+
+    let output = match cmd.output() {
+        Ok(output) => output,
+        Err(e) => {
+            eprintln!("启动更新检查失败: {e}");
+            return false;
+        }
+    };
+
+    // 输出是「单行 JSON + 可读提示」，取第一行以 `{` 开头的内容。
+    let line = String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .find(|line| line.trim_start().starts_with('{'))
+        .map(str::to_owned);
+
+    let Some(line) = line else {
+        // 没有可解析输出时退回退出码：4 表示有可用更新。
+        return output.status.code() == Some(4);
+    };
+    let Ok(report) = serde_json::from_str::<serde_json::Value>(&line) else {
+        return output.status.code() == Some(4);
+    };
+
+    report
+        .get("updates")
+        .and_then(|value| value.as_array())
+        .map(|updates| {
+            updates.iter().any(|item| {
+                let needed = item
+                    .get("needs_update")
+                    .and_then(|value| value.as_bool())
+                    .unwrap_or(false);
+                let is_dytes_cli = item.get("type").and_then(|value| value.as_str())
+                    == Some("core")
+                    && item.get("name").and_then(|value| value.as_str()) == Some("dytes");
+                needed && !is_dytes_cli
+            })
+        })
+        .unwrap_or(false)
+}
+
+/// 后台检查更新，仅在确有更新时打开 `dytes update --gui` 图形窗口。
+///
+/// 更新失败、dytes 缺失或检查失败都只记录日志，不阻塞 Piksel 启动。
 pub fn spawn_background_update() {
     std::thread::spawn(|| {
         let Some(exe) = find_global() else {
             eprintln!("未检测到全局 dytes，跳过启动更新");
             return;
         };
+
+        if !has_project_updates(&exe) {
+            println!("启动更新：没有需要更新的项目，跳过图形更新窗口");
+            return;
+        }
 
         println!("Running: {}", exe.display());
         let mut cmd = Command::new(&exe);
