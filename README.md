@@ -9,7 +9,7 @@ Piksel 是一个用 Rust 编写的轻量桌面容器：它只负责**原生窗�
 ```text
 用户双击 piksel.exe
         │
-        ├─ 单实例检查（run.pid）
+        ├─ 单实例文件锁（run.pid）
         ├─ dytes update --gui               图形化检查并安装更新
         ├─ cyctron start                    启动本地服务 127.0.0.1:44944
         └─ 原生窗口 + WebView ──────────────▶ Web UI
@@ -27,11 +27,11 @@ Piksel 是一个用 Rust 编写的轻量桌面容器：它只负责**原生窗�
 ## 主要能力
 
 - **原生窗口 + WebView**：基于 `winit` + `wry`，Windows / macOS / Linux 共用一套窗口与尺寸同步逻辑。
-- **单实例运行**：通过 `run.pid` 记录进程号，并用系统调用（Windows `OpenProcess`、Unix `kill(pid, 0)`）判断其是否存活，避免重复启动。
+- **单实例运行**：对可执行文件目录下的 `run.pid` 加独占文件锁（Unix `flock`、Windows 独占共享模式），进程退出时由系统自动释放；不支持文件锁的文件系统回退到 PID 存活检测，避免 PID 复用时误判。
 - **启动自更新**：启动后在后台打开 `dytes update --gui` 图形更新窗口，不阻塞窗口创建。
 - **服务托管**：以子进程方式运行 `cyctron start`；Windows 下不弹出控制台窗口，主进程退出时终止并回收该子进程。
 - **注入桌面标识**：向页面注入 `window.Piksel_DESKTOP = true`，Web 层可据此启用桌面端行为。
-- **跨平台适配**：Linux 下初始化 GTK 并在事件循环中泵送 GTK 事件，避免 WebView 闪烁；退出时注册 `SIGINT` / `SIGTERM` / Windows 控制台事件处理。
+- **跨平台适配**：Linux 下初始化 GTK 并在事件循环中泵送 GTK 事件，避免 WebView 闪烁；`SIGINT` / `SIGTERM` / Windows 控制台事件通过 `EventLoopProxy` 投递到事件循环，能走正常的退出清理路径；panic 时由 panic hook 兜底终止 cyctron、删除 `run.pid`。
 - **开发调试**：WebView 默认开启 devtools。
 
 ## 目录结构
@@ -42,7 +42,8 @@ Piksel/
 │   ├── main.rs                 # 入口：单实例、事件循环、cyctron 启停
 │   ├── core/
 │   │   ├── app.rs              # 窗口/WebView 生命周期与 resize 同步
-│   │   └── pid.rs              # PidManager：单实例、更新、cyctron 托管
+│   │   ├── paths.rs            # 运行时路径：可执行文件目录、run.pid、同级可执行文件
+│   │   └── pid.rs              # PidManager：单实例锁、更新、cyctron 托管
 │   ├── application/
 │   │   ├── browser.rs          # 创建 WebView（URL、注入脚本、devtools）
 │   │   └── vindu.rs            # 窗口创建入口（转交 platform）
@@ -77,14 +78,14 @@ cargo build --release
 
 ## 运行
 
-Piksel 需要在**工作目录**中找到同级的 `cyctron` 与 `dytes`；首页 HTML 由 cyctron 内置返回，不再需要 `index.html` 文件。典型目录：
+Piksel 在与**可执行文件同级**的目录中查找 `cyctron` 与 `dytes`（找不到时回退到当前工作目录，便于开发），因此可以从任意工作目录、桌面快捷方式或开机自启启动；首页 HTML 由 cyctron 内置返回，不再需要 `index.html` 文件。典型目录：
 
 ```text
 piksel/
 ├── piksel.exe / piksel
 ├── cyctron.exe / cyctron
 ├── dytes.exe / dytes
-└── run.pid                  # 运行时自动生成
+└── run.pid                  # 运行时自动生成（固定在可执行文件目录）
 ```
 
 直接执行 `piksel.exe` 即可；首次运行前请确认 `cyctron` 可用，否则窗口虽会打开，但页面无法加载。推荐的完整安装 / 更新 / 发布流程请参考 `dytes_sys_operations` 中的相关文档。
@@ -98,10 +99,10 @@ piksel/
 ```json
 {
   "name": "piksel",
-  "version": "1.1.31",
+  "version": "1.1.36",
   "type": "app",
-  "dependencies-core": { "cyctron": "1.0.18", "dytes": "0.1.30" },
-  "dependencies-sys": { "chatllm": "1.0.15", "ostfil": "1.0.3", "database": "1.0.4", "sysinfo": "0.1.2" },
+  "dependencies-core": { "cyctron": "1.0.18", "dytes": "0.2.24" },
+  "dependencies-sys": { "chatllm": "0.2.7", "ostfil": "1.0.5", "database": "1.0.6", "sysinfo": "0.1.3" },
   "dependencies-web": { "init": "1.0.23", "pages": "1.0.1", "stylesheet": "1.0.4", "chat_ui": "1.0.17", "setting": "1.0.13" },
   "exports": {
     "./target/release/piksel.exe": "piksel.exe"
@@ -110,6 +111,7 @@ piksel/
 }
 ```
 
+- `type`：Piksel 是桌面应用，必须为 `app`；发布路径与旧版本客户端的更新检查都依赖 `app/piksel/...`。
 - `dependencies-core` / `dependencies-sys` / `dependencies-web`：安装时由 `dytes` 解析并拉取。
 - `exports`：发布时把构建产物映射到包内路径。
 - `auto_update`：允许 `dytes update --gui` 在启动时自动检查更新。
@@ -120,8 +122,8 @@ piksel/
 
 ```bash
 # 先同时升级 Cargo.toml 与 dytes.json 的 version，再打同名 tag
-git tag v1.1.31
-git push origin v1.1.31
+git tag v1.1.36
+git push origin v1.1.36
 
 # 或手动重跑：GitHub → Actions → Release Piksel → Run workflow
 ```
@@ -139,7 +141,7 @@ git push origin v1.1.31
 构建前会校验：
 
 - `Cargo.toml` 与 `dytes.json` 的 `version` 必须一致；
-- tag 发布时，tag 名必须是 `v` + 版本号（如 `v1.1.31`）。
+- tag 发布时，tag 名必须是 `v` + 版本号（如 `v1.1.36`）。
 
 > 发版前务必**同时**更新 `Cargo.toml` 与 `dytes.json` 中的 `version`；仅替换二进制而不升版本，`dytes` 会认为“已是最新”而跳过更新。
 

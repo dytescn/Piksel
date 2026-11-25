@@ -77,7 +77,12 @@ jobs:
           echo "manifest=$version cargo=$cargo_version"
           test "$version" = "$cargo_version"
 
-          # tag 发布时，tag 名必须与版本一致（v1.1.13）
+          # Piksel 是桌面应用：类型必须是 app，发布路径才会是
+          # app/piksel/...；旧版本客户端只读取该路径。改成 core 会导致
+          # 已安装版本无法通过 dytes update 升级（见 issue #2）。
+          test "$pkg_type" = "app"
+
+          # tag 发布时，tag 名必须与版本一致（v1.1.35）
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
             test "v$version" = "$GITHUB_REF_NAME"
           fi
@@ -128,7 +133,6 @@ jobs:
   publish-manifest:
     name: Publish manifest
     needs: build
-    if: always()
     runs-on: ubuntu-latest
 
     steps:

@@ -7,6 +7,15 @@ use winit::event_loop::ActiveEventLoop;
 use winit::window::{Window, WindowId};
 use wry::{Rect, WebView};
 
+#[cfg(target_os = "linux")]
+use winit::event_loop::ControlFlow;
+
+/// 由其他线程（信号处理器轮询线程等）投递到事件循环的事件。
+#[derive(Debug, Clone, Copy)]
+pub enum UserEvent {
+    Exit,
+}
+
 pub struct App {
     window: Option<Window>,
     webview: Option<WebView>,
@@ -21,8 +30,9 @@ impl App {
     }
 
     fn render(&mut self, size: PhysicalSize<u32>) {
-        let window = self.window.as_ref().unwrap();
-        let webview = self.webview.as_ref().unwrap();
+        let (Some(window), Some(webview)) = (self.window.as_ref(), self.webview.as_ref()) else {
+            return;
+        };
         let size = size.to_logical::<u32>(window.scale_factor());
         let new_bounds = Rect {
             position: LogicalPosition::new(0, 0).into(),
@@ -41,15 +51,36 @@ impl App {
     }
 }
 
-impl ApplicationHandler for App {
+impl ApplicationHandler<UserEvent> for App {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        self.window = vindu::init_vindu(event_loop);
-        self.webview = browser::create_webview(self.window.as_ref());
-        #[cfg(target_os = "linux")]
-        {
-            // Linux GTK 下 WebView 初始化必须 pump GTK 事件一次，避免闪烁
-            while gtk::events_pending() {
-                gtk::main_iteration_do(false);
+        let window = match vindu::init_vindu(event_loop) {
+            Ok(window) => window,
+            Err(e) => {
+                eprintln!("创建窗口失败: {e}");
+                event_loop.exit();
+                return;
+            }
+        };
+        self.window = Some(window);
+
+        let Some(window) = self.window.as_ref() else {
+            return;
+        };
+        match browser::create_webview(window) {
+            Ok(webview) => {
+                self.webview = Some(webview);
+
+                #[cfg(target_os = "linux")]
+                {
+                    // Linux GTK 下 WebView 初始化必须 pump GTK 事件一次，避免闪烁
+                    while gtk::events_pending() {
+                        gtk::main_iteration_do(false);
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("创建 WebView 失败: {e}");
+                event_loop.exit();
             }
         }
     }
@@ -68,20 +99,28 @@ impl ApplicationHandler for App {
                 self.render(size);
             }
 
-            WindowEvent::RedrawRequested => {}
-
             _ => {}
         }
     }
 
-    fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
-        if let Some(window) = &self.window {
-            window.request_redraw();
+    fn user_event(&mut self, event_loop: &ActiveEventLoop, event: UserEvent) {
+        if matches!(event, UserEvent::Exit) {
+            event_loop.exit();
         }
+    }
 
+    fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
         #[cfg(target_os = "linux")]
-        while gtk::events_pending() {
-            gtk::main_iteration_do(false);
+        {
+            // GTK / WebKit 的事件需要定期泵送。用定时器驱动，而不是无条件
+            // request_redraw：后者会让 RedrawRequested 始终为空的事件循环
+            // 持续自旋，占满 CPU。
+            while gtk::events_pending() {
+                gtk::main_iteration_do(false);
+            }
+            _event_loop.set_control_flow(ControlFlow::WaitUntil(
+                std::time::Instant::now() + std::time::Duration::from_millis(16),
+            ));
         }
     }
 }
