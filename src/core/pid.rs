@@ -22,6 +22,19 @@ use std::os::windows::process::CommandExt;
 #[cfg(windows)]
 use windows::core::BOOL;
 
+/// `cyctron` 的候选名，按当前平台的优先级排列。
+///
+/// 安装目录里可能同时存在多个平台的产物（例如 exFAT 移动硬盘上 `cyctron.bin`
+/// 与 `cyctron.exe` 并存）。如果候选顺序不区分平台，Linux 上会优先选中
+/// `cyctron.exe`，启动时得到 `Exec format error (os error 8)`，窗口无法加载页面。
+#[cfg(windows)]
+pub(crate) const CYCTRON_CANDIDATES: &[&str] = &["cyctron.exe", "cyctron"];
+/// macOS 的发布产物是 bundle 目录，`Command` 无法直接执行，优先无后缀入口。
+#[cfg(target_os = "macos")]
+pub(crate) const CYCTRON_CANDIDATES: &[&str] = &["cyctron", "cyctron.app"];
+#[cfg(all(unix, not(target_os = "macos")))]
+pub(crate) const CYCTRON_CANDIDATES: &[&str] = &["cyctron", "cyctron.bin"];
+
 /// 持有单实例锁的句柄：进程存活期间一直持有，进程退出时由操作系统释放。
 #[derive(Default)]
 pub struct PidManager {
@@ -76,12 +89,11 @@ impl PidManager {
 
     pub fn start_cyctron(&mut self) -> io::Result<()> {
         // 发布产物按平台命名（cyctron.bin / cyctron.app），安装器会额外生成
-        // 无后缀的 `cyctron` 命令入口；这里按优先级回退，兼容旧安装。
-        let candidates = ["cyctron", "cyctron.exe", "cyctron.bin", "cyctron.app"];
-        let exe = paths::find_executable(&candidates).ok_or_else(|| {
+        // 无后缀的 `cyctron` 命令入口；候选名按平台排序，避免跨平台误选。
+        let exe = paths::find_executable(CYCTRON_CANDIDATES).ok_or_else(|| {
             io::Error::new(
                 io::ErrorKind::NotFound,
-                "未找到 cyctron（cyctron / cyctron.exe / cyctron.bin / cyctron.app）",
+                format!("未找到 cyctron（{}）", CYCTRON_CANDIDATES.join(" / ")),
             )
         })?;
         println!("Trying to start: {}", exe.display());

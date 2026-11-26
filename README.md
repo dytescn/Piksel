@@ -101,7 +101,7 @@ piksel/
 ```json
 {
   "name": "piksel",
-  "version": "1.1.39",
+  "version": "1.1.41",
   "type": "app",
   "dependencies-core": { "cyctron": "1.0.18" },
   "dependencies-sys": { "chatllm": "0.2.7", "ostfil": "1.0.5", "database": "1.0.6", "sysinfo": "0.1.3" },
@@ -125,8 +125,8 @@ piksel/
 
 ```bash
 # 先同时升级 Cargo.toml 与 dytes.json 的 version，再打同名 tag
-git tag v1.1.39
-git push origin v1.1.39
+git tag v1.1.41
+git push origin v1.1.41
 
 # 或手动重跑：GitHub → Actions → Release Piksel → Run workflow
 ```
@@ -144,7 +144,7 @@ git push origin v1.1.39
 构建前会校验：
 
 - `Cargo.toml` 与 `dytes.json` 的 `version` 必须一致；
-- tag 发布时，tag 名必须是 `v` + 版本号（如 `v1.1.39`）。
+- tag 发布时，tag 名必须是 `v` + 版本号（如 `v1.1.41`）。
 
 > 发版前务必**同时**更新 `Cargo.toml` 与 `dytes.json` 中的 `version`；仅替换二进制而不升版本，`dytes` 会认为“已是最新”而跳过更新。
 
