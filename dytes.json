@@ -1,6 +1,6 @@
 {
   "name": "piksel",
-  "version": "1.1.39",
+  "version": "1.1.40",
   "description": "piksel for apps management",
   "keywords": [
     "apps",
@@ -16,14 +16,19 @@
     "chatllm": "0.2.7",
     "ostfil": "1.0.5",
     "database": "1.0.6",
-    "sysinfo": "0.1.3"
+    "sysinfo": "0.1.3",
+    "material_lib": "1.0.4",
+    "workspace_lib": "1.0.4"
   },
   "dependencies-web": {
     "init": "1.0.24",
     "pages": "1.0.1",
     "stylesheet": "1.0.4",
     "chat_ui": "1.0.18",
-    "setting": "1.0.14"
+    "setting": "1.0.14",
+    "material": "1.0.6",
+    "plugins": "1.0.12",
+    "workspace": "1.0.7"
   },
   "exports": {
     "./target/release/piksel.exe": "piksel.exe"
